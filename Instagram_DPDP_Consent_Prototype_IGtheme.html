@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DPDP Consent Prototype — Instagram theme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- Outer tool chrome (rail + why-panel) — kept as our own brand ---- */
+    --tool-indigo:#241E4E;
+    --tool-indigo-2:#3B3178;
+    --tool-lavender:#EEEBFA;
+    --tool-coral:#FF6B4A;
+    --tool-mute:#6B6489;
+    --tool-line:#E7E3F5;
+    --tool-bg:#F7F5FB;
+
+    /* ---- In-phone simulated app theme (Instagram-style) ---- */
+    --ig-bg:#FFFFFF;
+    --ig-text:#262626;
+    --ig-secondary:#8E8E8E;
+    --ig-border:#DBDBDB;
+    --ig-border-light:#EFEFEF;
+    --ig-blue:#0095F6;
+    --ig-blue-press:#1877C9;
+    --ig-red:#ED4956;
+    --ig-track-off:#E0E0E0;
+    --story-grad: linear-gradient(45deg,#FFD66B 0%, #FF8A3D 28%, #E5406B 55%, #B23AC0 78%, #5B6FE0 100%);
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--tool-bg);
+    color:var(--ig-text);
+    min-height:100vh;
+  }
+  .app{
+    display:grid;
+    grid-template-columns: 280px 1fr;
+    min-height:100vh;
+  }
+  /* ================= OUTER TOOL RAIL ================= */
+  .rail{
+    background:var(--tool-indigo);
+    color:#fff;
+    padding:28px 20px 20px;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+  }
+  .rail-kicker{ font-family:'Manrope',sans-serif; font-size:11px; font-weight:700; letter-spacing:1.5px; color:var(--tool-coral); margin-bottom:6px; }
+  .rail-title{ font-family:'Manrope',sans-serif; font-size:18px; font-weight:800; line-height:1.3; margin-bottom:4px; }
+  .rail-sub{ font-size:12px; color:#B9B2E0; margin-bottom:20px; line-height:1.5; }
+  .theme-note{
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14);
+    border-radius:12px; padding:10px 12px; font-size:11px; color:#D9D4F2; line-height:1.5; margin-bottom:22px;
+  }
+  .theme-note b{ color:#fff; }
+  .rail-group-label{ font-size:10.5px; font-weight:700; letter-spacing:1px; color:#8B82C4; margin:18px 0 8px; text-transform:uppercase; }
+  .rail-item{ display:flex; align-items:flex-start; gap:10px; padding:9px 10px; border-radius:10px; cursor:pointer; margin-bottom:2px; transition:background 0.15s ease; }
+  .rail-item:hover{ background:rgba(255,255,255,0.06); }
+  .rail-item.active{ background:var(--tool-coral); }
+  .rail-num{ font-family:'Manrope',sans-serif; font-size:11px; font-weight:700; width:20px;height:20px; border-radius:50%; background:rgba(255,255,255,0.14); display:flex;align-items:center;justify-content:center; flex-shrink:0; margin-top:1px; }
+  .rail-item.active .rail-num{ background:rgba(0,0,0,0.18); }
+  .rail-item-title{ font-size:13px; font-weight:600; line-height:1.35; }
+  .rail-item-sub{ font-size:10.5px; color:#B9B2E0; margin-top:1px; }
+  .rail-item.active .rail-item-sub{ color:rgba(255,255,255,0.85); }
+
+  /* ================= STAGE ================= */
+  .stage{ padding:36px 44px 60px; display:flex; flex-direction:column; align-items:center; }
+  .stage-header{ width:100%; max-width:1080px; display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:26px; gap:24px; }
+  .stage-header-left .epic-tag{ display:inline-block; font-size:11px; font-weight:700; letter-spacing:0.6px; color:var(--tool-coral); background:#FFE3D9; padding:4px 10px; border-radius:20px; margin-bottom:10px; }
+  .stage-header-left h1{ font-family:'Manrope',sans-serif; font-size:24px; font-weight:800; margin:0 0 6px; color:var(--tool-indigo); }
+  .stage-header-left p{ font-size:13.5px; color:var(--tool-mute); max-width:520px; line-height:1.5; margin:0; }
+  .req-pill{ font-family:'Manrope',sans-serif; font-size:11px; font-weight:700; color:var(--tool-indigo); background:var(--tool-lavender); border:1px solid var(--tool-line); padding:6px 12px; border-radius:10px; white-space:nowrap; margin-top:2px; }
+
+  .content-row{ width:100%; max-width:1080px; display:grid; grid-template-columns: 380px 1fr; gap:40px; align-items:flex-start; }
+
+  /* ================= PHONE (hardware) ================= */
+  .phone-wrap{ display:flex; flex-direction:column; align-items:center; }
+  .phone{
+    width:360px; height:740px;
+    background:var(--ig-bg);
+    border-radius:42px;
+    border:10px solid #1C1C1E;
+    box-shadow: 0 24px 60px -20px rgba(20,20,20,0.45);
+    position:relative; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .notch{ position:absolute; top:0; left:50%; transform:translateX(-50%); width:130px; height:22px; background:#1C1C1E; border-radius:0 0 14px 14px; z-index:5; }
+  .status-bar{ height:38px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:0 22px; font-size:12px; font-weight:600; color:var(--ig-text); background:var(--ig-bg); }
+  .screen-body{ flex:1; overflow-y:auto; padding:0 0 12px; background:var(--ig-bg); }
+  .screen-body::-webkit-scrollbar{ width:0px; }
+  .phone-nav{ flex-shrink:0; padding:10px 18px 16px; border-top:1px solid var(--ig-border-light); display:flex; gap:10px; flex-direction:column; background:var(--ig-bg); }
+  .phone-nav .nav-label{ font-size:9.5px; letter-spacing:1px; color:#B7B2CF; text-transform:uppercase; font-weight:700; text-align:center; margin-bottom:2px; }
+  .phone-nav .nav-row{ display:flex; gap:10px; }
+
+  .btn{ font-family:'Inter',sans-serif; font-size:13.5px; font-weight:700; border:none; border-radius:10px; padding:11px 16px; cursor:pointer; flex:1; transition:transform 0.08s ease, opacity 0.15s ease, background 0.15s; }
+  .btn:active{ transform:scale(0.97); }
+  .btn-primary{ background:var(--ig-blue); color:#fff; }
+  .btn-primary:hover{ background:var(--ig-blue-press); }
+  .btn-secondary{ background:#fff; color:var(--ig-text); border:1.5px solid var(--ig-border); flex:0 0 auto; padding:11px 18px; }
+  .btn-full{ width:100%; }
+
+  /* ================= In-phone IG chrome: top bar + bottom tabs ================= */
+  .ig-topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px 12px; border-bottom:1px solid var(--ig-border-light);
+    position:sticky; top:0; background:var(--ig-bg); z-index:3;
+  }
+  .ig-wordmark{ display:flex; align-items:center; gap:7px; }
+  .ig-wordmark .cam-icon{ width:20px; height:20px; }
+  .ig-wordmark span{ font-family:'Inter',sans-serif; font-weight:700; font-size:18px; letter-spacing:-0.3px; color:var(--ig-text); }
+  .ig-topbar-icons{ display:flex; gap:16px; align-items:center; }
+  .ig-topbar-icons svg{ width:22px; height:22px; color:var(--ig-text); }
+
+  .ig-bottomnav{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 22px; border-top:1px solid var(--ig-border-light); background:var(--ig-bg);
+  }
+  .ig-bottomnav svg{ width:23px; height:23px; color:var(--ig-text); }
+  .ig-bottomnav .nav-avatar{ width:22px; height:22px; border-radius:50%; background:var(--tool-indigo); border:1.5px solid var(--ig-text); }
+
+  .ig-stories{ display:flex; gap:14px; padding:12px 16px 14px; overflow-x:auto; border-bottom:1px solid var(--ig-border-light); }
+  .story{ display:flex; flex-direction:column; align-items:center; gap:5px; flex-shrink:0; width:58px; }
+  .story-ring{ width:56px; height:56px; border-radius:50%; background:var(--story-grad); display:flex; align-items:center; justify-content:center; }
+  .story-ring.muted{ background:var(--ig-border); }
+  .story-avatar{ width:50px; height:50px; border-radius:50%; background:#fff; border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--ig-secondary); }
+  .story span{ font-size:10.5px; color:var(--ig-text); }
+
+  /* ================= Screen content ================= */
+  .app-header{ display:flex; align-items:center; justify-content:center; position:relative; padding:14px 16px 12px; border-bottom:1px solid var(--ig-border-light); }
+  .app-header h2{ font-size:15px; font-weight:700; margin:0; color:var(--ig-text); }
+  .app-header .back-x{ position:absolute; left:16px; font-size:18px; color:var(--ig-text); cursor:default; }
+  .screen-pad{ padding:14px 18px 6px; }
+
+  .notice-card{
+    background:#fff; border:1px solid var(--ig-border); border-radius:12px; padding:16px; margin:12px 16px 16px;
+  }
+  .notice-card .tag{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; color:var(--ig-red); margin-bottom:8px; letter-spacing:0.3px; }
+  .notice-card h4{ font-size:14.5px; margin:0 0 6px; color:var(--ig-text); font-weight:700; }
+  .notice-card p{ font-size:12.8px; color:var(--ig-secondary); line-height:1.5; margin:0 0 12px; }
+  .notice-card .link-btn{ color:var(--ig-blue); font-weight:700; font-size:13px; cursor:pointer; }
+
+  .feed-placeholder{ display:flex; flex-direction:column; gap:1px; opacity:0.6; }
+  .feed-card{ height:0; padding-bottom:78%; background:var(--ig-border-light); position:relative; margin-bottom:10px; border-radius:4px; }
+  .feed-card::before{ content:""; position:absolute; top:12px; left:12px; width:30px; height:30px; border-radius:50%; background:var(--ig-border); }
+
+  .field{ margin-bottom:16px; padding:0 16px; }
+  .field label{ display:block; font-size:12px; font-weight:700; color:var(--ig-secondary); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.4px; }
+  .field input{ width:100%; padding:11px 12px; border-radius:8px; border:1.5px solid var(--ig-border); font-size:14px; font-family:'Inter',sans-serif; color:var(--ig-text); background:#FAFAFA; }
+  .field input:focus{ outline:none; border-color:var(--ig-blue); background:#fff; }
+  .hint{ font-size:11.5px; color:var(--ig-secondary); margin-top:6px; line-height:1.45; padding:0 16px; }
+  .hint.no-pad{ padding:0; }
+
+  .verify-spinner{ width:56px; height:56px; margin:36px auto 18px; border-radius:50%; border:4px solid var(--ig-border-light); border-top-color:var(--ig-blue); animation:spin 0.9s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .center-copy{ text-align:center; padding:10px 26px; }
+  .center-copy h4{ font-size:16px; margin:0 0 8px; color:var(--ig-text); font-weight:700; }
+  .center-copy p{ font-size:12.8px; color:var(--ig-secondary); line-height:1.55; margin:0; }
+
+  .purpose-card{ border-bottom:1px solid var(--ig-border-light); padding:14px 16px; }
+  .purpose-card.locked{ background:#FAFAFA; }
+  .purpose-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .purpose-title{ font-size:13.5px; font-weight:700; color:var(--ig-text); margin:0 0 4px; }
+  .purpose-desc{ font-size:11.8px; color:var(--ig-secondary); line-height:1.45; margin:0; }
+  .lock-note{ font-size:11px; color:var(--ig-red); font-weight:600; margin-top:8px; display:flex; gap:5px; align-items:center; }
+
+  .toggle{ position:relative; width:44px; height:26px; border-radius:14px; background:var(--ig-track-off); cursor:pointer; flex-shrink:0; transition:background 0.15s; }
+  .toggle.on{ background:var(--ig-blue); }
+  .toggle.disabled{ cursor:not-allowed; opacity:0.55; }
+  .toggle-knob{ position:absolute; top:2px; left:2px; width:22px; height:22px; border-radius:50%; background:#fff; transition:left 0.15s; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+  .toggle.on .toggle-knob{ left:20px; }
+
+  .consent-row{ display:flex; justify-content:space-between; align-items:center; padding:13px 16px; border-bottom:1px solid var(--ig-border-light); }
+  .consent-row-title{ font-size:13.5px; font-weight:600; color:var(--ig-text); }
+  .consent-row-meta{ font-size:11px; color:var(--ig-secondary); margin-top:2px; }
+
+  .sla-card{ background:#FAFAFA; border:1px solid var(--ig-border-light); border-radius:10px; padding:12px 14px; margin:0 16px 10px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .sla-card .sla-title{ font-size:12.5px; font-weight:700; color:var(--ig-text); }
+  .sla-card .sla-meta{ font-size:10.8px; color:var(--ig-secondary); margin-top:2px; }
+  .sla-chip{ font-size:10.5px; font-weight:700; color:#1F8A4C; background:#E3F5E9; padding:4px 9px; border-radius:20px; white-space:nowrap; }
+
+  .link-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--ig-border-light); cursor:pointer; }
+  .link-row-title{ font-size:13.5px; font-weight:600; color:var(--ig-text); }
+  .link-row .chev{ color:var(--ig-secondary); }
+
+  .section-label{ font-size:11px; font-weight:700; color:var(--ig-secondary); text-transform:uppercase; letter-spacing:0.5px; padding:16px 16px 8px; }
+
+  .success-check{ width:52px;height:52px;border-radius:50%; background:#1C1C1E; color:#fff; display:flex; align-items:center; justify-content:center; font-size:24px; margin:30px auto 14px; }
+
+  .avatar-row{ display:flex; align-items:center; gap:10px; margin:14px 16px; }
+  .avatar{ width:40px;height:40px;border-radius:50%; background:var(--tool-indigo); color:#fff; display:flex; align-items:center;justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+
+  .chip-row{ display:flex; gap:8px; margin:0 16px 14px; flex-wrap:wrap; }
+  .method-chip{ border:1.5px solid var(--ig-border); border-radius:8px; padding:10px 12px; font-size:12.5px; font-weight:600; color:var(--ig-text); cursor:pointer; flex:1; text-align:center; }
+  .method-chip.selected{ border-color:var(--ig-blue); background:#EAF6FF; color:var(--ig-blue); }
+
+  .footnote{ font-size:11px; color:var(--ig-secondary); text-align:center; margin:10px 20px 0; line-height:1.5; }
+
+  .why-panel{ background:#fff; border:1px solid var(--tool-line); border-radius:20px; padding:28px 30px; }
+  .why-panel h3{ font-family:'Manrope',sans-serif; font-size:15px; color:var(--tool-indigo); margin:0 0 14px; }
+  .why-panel .req-row{ display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--tool-line); }
+  .why-panel .req-row:last-child{ border-bottom:none; }
+  .why-panel .req-id{ font-family:'Manrope',sans-serif; font-size:11px; font-weight:800; color:var(--tool-indigo); background:var(--tool-lavender); padding:3px 8px; border-radius:7px; flex-shrink:0; height:fit-content; margin-top:1px; }
+  .why-panel .req-text{ font-size:13px; color:#2A2540; line-height:1.5; }
+
+  .flow-diagram{ margin-top:22px; padding-top:20px; border-top:1px solid var(--tool-line); }
+  .flow-diagram .label{ font-size:10.5px; font-weight:700; letter-spacing:1px; color:var(--tool-mute); text-transform:uppercase; margin-bottom:12px; }
+  .flow-steps{ display:flex; flex-wrap:wrap; gap:6px; }
+  .flow-chip{ font-size:11.5px; font-weight:600; padding:6px 11px; border-radius:20px; background:var(--tool-bg); color:var(--tool-mute); border:1px solid var(--tool-line); }
+  .flow-chip.current{ background:var(--tool-indigo); color:#fff; border-color:var(--tool-indigo); }
+  .flow-chip.done{ background:#D6F0EE; color:#0F6B6B; border-color:#D6F0EE; }
+
+  .modal-overlay{ position:fixed; inset:0; background:rgba(20,20,20,0.55); display:none; align-items:center; justify-content:center; z-index:50; }
+  .modal-overlay.show{ display:flex; }
+  .modal-box{ background:#fff; border-radius:16px; padding:24px; width:340px; max-width:90vw; }
+  .modal-box h4{ margin:0 0 8px; color:var(--ig-text); font-size:15.5px; font-weight:700; }
+  .modal-box p{ font-size:13px; color:var(--ig-secondary); line-height:1.55; margin:0 0 16px; }
+  .modal-actions{ display:flex; gap:10px; }
+
+  @media (max-width: 980px){
+    .app{ grid-template-columns:1fr; }
+    .rail{ position:relative; height:auto; }
+    .content-row{ grid-template-columns:1fr; }
+    .phone-wrap{ margin:0 auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="rail">
+    <div class="rail-kicker">CLICKABLE PROTOTYPE</div>
+    <div class="rail-title">DPDP Consent &amp; Minor-Data Handling</div>
+    <div class="rail-sub">Instagram India &middot; Ad personalisation consent + under-18 verifiable parental consent.</div>
+    <div class="theme-note"><b>Instagram-themed skin.</b> Visual language only (white/black UI, blue actions, story ring) for presentation purposes — not Instagram's actual logo assets or exact brand gradient.</div>
+    <div id="rail-list"></div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-header">
+      <div class="stage-header-left">
+        <div class="epic-tag" id="epicTag">EPIC</div>
+        <h1 id="screenTitle">Title</h1>
+        <p id="screenDesc">Description</p>
+      </div>
+      <div class="req-pill" id="reqPill">FR-ID</div>
+    </div>
+
+    <div class="content-row">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="notch"></div>
+          <div class="status-bar">
+            <span>9:41</span>
+            <span id="deviceTag">Teen device</span>
+          </div>
+          <div class="screen-body" id="screenBody"></div>
+          <div class="phone-nav" id="phoneNav"></div>
+        </div>
+      </div>
+
+      <div class="why-panel">
+        <h3>Why this screen exists</h3>
+        <div id="whyList"></div>
+        <div class="flow-diagram">
+          <div class="label">Flow so far</div>
+          <div class="flow-steps" id="flowSteps"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+/* ============================================================
+   Generic icon set (not Instagram's proprietary glyphs — plain
+   outline shapes used across many apps)
+   ============================================================ */
+const ICONS = {
+  camera: `<svg class="cam-icon" viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><rect x="2" y="6" width="20" height="14" rx="3"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg>`,
+  heart: `<svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><path d="M12 20s-7-4.6-9.4-9C1 7.5 2.7 4 6.2 4 8.4 4 10 5.3 12 7.5 14 5.3 15.6 4 17.8 4 21.3 4 23 7.5 21.4 11 19 15.4 12 20 12 20z"/></svg>`,
+  send: `<svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>`,
+  home: `<svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>`,
+  search: `<svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>`,
+  reels: `<svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 4l3 5M14 4l3 5"/></svg>`,
+  create: `<svg viewBox="0 0 24 24" fill="none" stroke="#262626" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>`,
+};
+
+function igTopBar(){
+  return `
+    <div class="ig-topbar">
+      <div class="ig-wordmark">${ICONS.camera}<span>Instagram</span></div>
+      <div class="ig-topbar-icons">${ICONS.heart}${ICONS.send}</div>
+    </div>`;
+}
+function igBottomNav(active){
+  const item = (key, icon) => `<span style="${active===key?'opacity:1':'opacity:0.45'}">${icon}</span>`;
+  return `
+    <div class="ig-bottomnav">
+      ${item('home', ICONS.home)}
+      ${item('search', ICONS.search)}
+      ${item('create', ICONS.create)}
+      ${item('reels', ICONS.reels)}
+      <span class="nav-avatar" style="${active==='profile'?'opacity:1':'opacity:0.55'}"></span>
+    </div>`;
+}
+function igStories(){
+  return `
+    <div class="ig-stories">
+      <div class="story"><div class="story-ring muted"><div class="story-avatar">You</div></div><span>Your story</span></div>
+      <div class="story"><div class="story-ring"><div class="story-avatar">RS</div></div><span>Riya</span></div>
+      <div class="story"><div class="story-ring"><div class="story-avatar">KM</div></div><span>Karan</span></div>
+      <div class="story"><div class="story-ring"><div class="story-avatar">NP</div></div><span>Naina</span></div>
+    </div>`;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  screenIndex: 0,
+  consents: { personalisation: false, analytics: true, crossapp: false, ads: false },
+};
+
+/* ============================================================
+   SCREEN DEFINITIONS
+   ============================================================ */
+const SCREENS = [
+  {
+    id: "signup", device: "Teen device", epic: "EPIC 1 · AGE ASSURANCE",
+    title: "Signup — date of birth",
+    desc: "First moment age assurance can act on a signal, before any personalised experience is switched on.",
+    reqPill: "AA-1",
+    requirements: [["AA-1", "Combine self-declared DOB with behavioural signals to assign an age-confidence score at signup."]],
+    render: () => `
+      <div class="app-header"><span class="back-x">‹</span><h2>Sign up</h2></div>
+      <p class="hint" style="margin:14px 0 4px;">Step 2 of 2 &middot; Almost done</p>
+      <div class="field" style="margin-top:16px;"><label>Full name</label><input type="text" value="Aditi Sharma" readonly /></div>
+      <div class="field"><label>Date of birth</label><input type="text" value="14 / 03 / 2010" readonly />
+        <div class="hint no-pad">We use this to give you the right experience and privacy protections for your age — not just to meet a minimum age.</div>
+      </div>
+      <div class="field"><label>Mobile number</label><input type="text" value="+91 9•• ••• •189" readonly /></div>
+    `,
+    nav: { next: "Sign up" },
+  },
+  {
+    id: "verifying", device: "Teen device", epic: "EPIC 1 · AGE ASSURANCE",
+    title: "Checking age signals",
+    desc: "A behind-the-scenes step: the age-confidence score is calculated from the declared DOB plus account signals. No user data is shown — it's a brief system pause.",
+    reqPill: "AA-1 / AA-2",
+    requirements: [
+      ["AA-1", "Every account gets an age-confidence score; scores update on defined trigger events."],
+      ["AA-2", "Low-confidence / flagged accounts are routed to a step-up experience before personalisation unlocks."],
+    ],
+    render: () => `
+      <div class="app-header"><h2>Setting up your account</h2></div>
+      <div class="center-copy" style="margin-top:40px;">
+        <div class="verify-spinner"></div>
+        <h4>Just a moment</h4>
+        <p>We're setting up an experience that's right for you.</p>
+      </div>
+    `,
+    nav: { next: "Continue", autoAdvanceMs: 1400 },
+  },
+  {
+    id: "restricted", device: "Teen device", epic: "EPIC 2 · VERIFIABLE PARENTAL CONSENT",
+    title: "Account flagged as under 18",
+    desc: "Core features stay available immediately. Personalisation and ads stay off until a parent completes verification — restriction happens by default, not by asking the teen to opt out.",
+    reqPill: "VPC-1",
+    requirements: [["VPC-1", "Under-18 accounts can't enable personalisation or ads until a linked parent completes verification; core safety features stay available."]],
+    render: () => `
+      ${igTopBar()}
+      ${igStories()}
+      <div class="notice-card">
+        <div class="tag">🔒 ACTION NEEDED</div>
+        <h4>Ask a parent to confirm your account</h4>
+        <p>Your account is set up for someone under 18. A parent or guardian needs to verify this once before we personalise your feed and ads.</p>
+        <span class="link-btn" id="inviteBtn">Send request to a parent</span>
+      </div>
+      <div class="feed-placeholder" style="padding:0 1px;">
+        <div class="feed-card"></div>
+        <div class="feed-card"></div>
+      </div>
+      <p class="footnote">Posting, messaging and browsing already work — this only affects personalised recommendations and ads.</p>
+      ${igBottomNav('home')}
+    `,
+    nav: { next: "Send request to a parent" },
+  },
+  {
+    id: "invite-sent", device: "Teen device", epic: "EPIC 2 · VERIFIABLE PARENTAL CONSENT",
+    title: "Request sent",
+    desc: "The teen's job in this flow ends here — everything from this point happens on the parent's device, which is the legally required decision-maker.",
+    reqPill: "VPC-1",
+    requirements: [["VPC-1", "A verification request is triggered to the nominated parent/guardian."]],
+    render: () => `
+      <div class="app-header"><h2>Confirm with a parent</h2></div>
+      <div class="success-check">&#10003;</div>
+      <div class="center-copy">
+        <h4>Request sent to Mom</h4>
+        <p>We've sent a secure link to the number ending in 4021. We'll let you know as soon as it's confirmed.</p>
+      </div>
+      <div class="notice-card">
+        <div class="tag" style="color:var(--ig-secondary);">🔒 STILL LOCKED</div>
+        <h4>Personalisation &amp; ads</h4>
+        <p>These stay off until the request above is confirmed.</p>
+      </div>
+    `,
+    nav: { next: "Continue as parent →" },
+  },
+  {
+    id: "parent-landing", device: "Parent device", epic: "EPIC 2 · VERIFIABLE PARENTAL CONSENT",
+    title: "Parent opens the verification link",
+    desc: "This is the moment DPDP actually requires: a real, verifiable adult confirming — not a checkbox the teen could tick on their own.",
+    reqPill: "VPC-2",
+    requirements: [["VPC-2", "Verify the parent's identity via a government-recognised digital identity channel or verified-OTP-plus-ID check."]],
+    render: () => `
+      <div class="app-header"><h2>Confirm your child's account</h2></div>
+      <div class="avatar-row">
+        <div class="avatar">AS</div>
+        <div><div class="consent-row-title">Aditi Sharma</div><div class="consent-row-meta">Wants to confirm you as parent/guardian</div></div>
+      </div>
+      <p class="hint" style="margin-bottom:14px;">Before we can turn on personalised recommendations or ads for this account, we need to verify who you are — required under India's data protection law for accounts belonging to someone under 18.</p>
+      <div class="field" style="margin-bottom:8px;"><label>Choose a verification method</label></div>
+      <div class="chip-row">
+        <div class="method-chip selected" id="chipDigilocker">DigiLocker</div>
+        <div class="method-chip" id="chipOtp">OTP + ID</div>
+      </div>
+      <p class="hint">DigiLocker confirms your identity directly through a government-issued digital ID — we never see or store the document itself.</p>
+    `,
+    nav: { next: "Verify with DigiLocker" },
+  },
+  {
+    id: "parent-verified", device: "Parent device", epic: "EPIC 2 · VERIFIABLE PARENTAL CONSENT",
+    title: "Identity confirmed",
+    desc: "Verification is complete — this unlocks the itemised consent choice, which is a separate step from identity itself.",
+    reqPill: "VPC-2",
+    requirements: [["VPC-2", "Verification completes via a DPDP Rules–compliant method; result is logged."]],
+    render: () => `
+      <div class="app-header"><h2>Confirm your child's account</h2></div>
+      <div class="success-check">&#10003;</div>
+      <div class="center-copy">
+        <h4>Identity confirmed</h4>
+        <p>Thanks — we've verified you as Aditi's parent/guardian via DigiLocker. Next, choose what Aditi's account can use her data for.</p>
+      </div>
+    `,
+    nav: { next: "Review data choices" },
+  },
+  {
+    id: "consent-notice", device: "Parent device", epic: "EPIC 3 & 4 · CONSENT NOTICE + AD RESTRICTIONS",
+    title: "Itemised consent notice",
+    desc: "Each purpose is separate and explained in plain language. Ads and behavioural tracking are locked off — not a toggle either of you can turn back on, because the law doesn't allow it for under-18 accounts.",
+    reqPill: "CN-1 / AD-1",
+    requirements: [
+      ["CN-1", "Standalone consent notice, separate from Terms of Service, itemised by purpose."],
+      ["AD-1", "Behavioural ad-targeting is excluded at the system level for verified under-18 accounts — not reversible via a setting."],
+    ],
+    render: () => `
+      <div class="app-header"><h2>Aditi's data choices</h2></div>
+      <div class="purpose-card">
+        <div class="purpose-top"><div><p class="purpose-title">Personalised content</p><p class="purpose-desc">Use Aditi's activity to shape what shows up in her feed and Explore.</p></div>
+        <div class="toggle ${state.consents.personalisation ? 'on' : ''}" data-key="personalisation"><div class="toggle-knob"></div></div></div>
+      </div>
+      <div class="purpose-card">
+        <div class="purpose-top"><div><p class="purpose-title">Product analytics</p><p class="purpose-desc">Help us understand crashes and usage so the app works reliably.</p></div>
+        <div class="toggle ${state.consents.analytics ? 'on' : ''}" data-key="analytics"><div class="toggle-knob"></div></div></div>
+      </div>
+      <div class="purpose-card">
+        <div class="purpose-top"><div><p class="purpose-title">Sharing across linked apps</p><p class="purpose-desc">Share activity with other apps in the same family to sync settings.</p></div>
+        <div class="toggle ${state.consents.crossapp ? 'on' : ''}" data-key="crossapp"><div class="toggle-knob"></div></div></div>
+      </div>
+      <div class="purpose-card locked">
+        <div class="purpose-top"><div><p class="purpose-title">Personalised &amp; behavioural ads</p><p class="purpose-desc">Show ads based on Aditi's activity and interests.</p><p class="lock-note">🔒 Off by law for accounts under 18</p></div>
+        <div class="toggle disabled"><div class="toggle-knob"></div></div></div>
+      </div>
+      <p class="footnote">You can change personalisation, analytics or sharing any time from Aditi's account settings.</p>
+    `,
+    nav: { next: "Save choices" },
+  },
+  {
+    id: "confirmed", device: "Parent device", epic: "EPIC 2 · VERIFIABLE PARENTAL CONSENT",
+    title: "Choices saved",
+    desc: "The consent decision is timestamped and recorded — this is the event that ultimately feeds the Consent Validity Rate metric.",
+    reqPill: "VPC-3",
+    requirements: [["VPC-3", "Parent's itemised decision is timestamped and recorded in the consent ledger."]],
+    render: () => `
+      <div class="app-header"><h2>Aditi's data choices</h2></div>
+      <div class="success-check">&#10003;</div>
+      <div class="center-copy">
+        <h4>Saved &middot; 4 Jul 2026, 10:42am</h4>
+        <p>Aditi's account now reflects these choices. She'll see her personalised feed unlock next time she opens the app — ads stay contextual only, as required for her age.</p>
+      </div>
+    `,
+    nav: { next: "See Aditi's dashboard →" },
+  },
+  {
+    id: "dashboard", device: "Any device", epic: "EPIC 5 · CONSENT & RIGHTS DASHBOARD",
+    title: "Consent & rights dashboard",
+    desc: "One surface for every purpose-level consent, with withdrawal exactly as easy as granting, plus self-service data rights requests.",
+    reqPill: "DB-1 / DB-2",
+    requirements: [
+      ["DB-1", "Every active purpose-level consent is visible with a timestamp, matching the consent ledger."],
+      ["DB-2", "Withdrawing any consent takes the same or fewer steps than granting it."],
+    ],
+    render: () => `
+      <div class="app-header"><span class="back-x">‹</span><h2>Privacy &amp; data</h2></div>
+      <div class="section-label">Your consents</div>
+      <div class="consent-row"><div><div class="consent-row-title">Personalised content</div><div class="consent-row-meta">Granted 4 Jul 2026</div></div>
+        <div class="toggle ${state.consents.personalisation ? 'on' : ''}" data-key="personalisation"><div class="toggle-knob"></div></div></div>
+      <div class="consent-row"><div><div class="consent-row-title">Product analytics</div><div class="consent-row-meta">Granted 4 Jul 2026</div></div>
+        <div class="toggle ${state.consents.analytics ? 'on' : ''}" data-key="analytics"><div class="toggle-knob"></div></div></div>
+      <div class="consent-row"><div><div class="consent-row-title">Sharing across linked apps</div><div class="consent-row-meta">Declined 4 Jul 2026</div></div>
+        <div class="toggle ${state.consents.crossapp ? 'on' : ''}" data-key="crossapp"><div class="toggle-knob"></div></div></div>
+      <div class="consent-row"><div><div class="consent-row-title">Personalised &amp; behavioural ads</div><div class="consent-row-meta">🔒 Not available under 18</div></div>
+        <div class="toggle disabled"><div class="toggle-knob"></div></div></div>
+
+      <div class="section-label">Your data rights</div>
+      <div class="link-row" id="rowAccess"><span class="link-row-title">Request a copy of your data</span><span class="chev">›</span></div>
+      <div class="link-row" id="rowCorrect"><span class="link-row-title">Correct something about your data</span><span class="chev">›</span></div>
+      <div class="link-row" id="rowErase"><span class="link-row-title">Delete your data</span><span class="chev">›</span></div>
+      <div class="link-row" id="rowGrievance"><span class="link-row-title">Report a privacy concern</span><span class="chev">›</span></div>
+      <div id="requestStatusArea" style="padding-top:10px;"></div>
+      ${igBottomNav('profile')}
+    `,
+    nav: { next: "Restart prototype" },
+  },
+];
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function renderRail(){
+  const rail = document.getElementById("rail-list");
+  rail.innerHTML = "";
+  let lastDevice = null;
+  SCREENS.forEach((s, i) => {
+    if (s.device !== lastDevice) {
+      const label = document.createElement("div");
+      label.className = "rail-group-label";
+      label.textContent = s.device;
+      if (i !== 0) rail.appendChild(label);
+      lastDevice = s.device;
+    }
+    const item = document.createElement("div");
+    item.className = "rail-item" + (i === state.screenIndex ? " active" : "");
+    item.innerHTML = `<div class="rail-num">${i+1}</div><div><div class="rail-item-title">${s.title}</div></div>`;
+    item.onclick = () => goTo(i);
+    rail.appendChild(item);
+  });
+}
+
+function renderStage(){
+  const s = SCREENS[state.screenIndex];
+  document.getElementById("epicTag").textContent = s.epic;
+  document.getElementById("screenTitle").textContent = s.title;
+  document.getElementById("screenDesc").textContent = s.desc;
+  document.getElementById("reqPill").textContent = s.reqPill;
+  document.getElementById("deviceTag").textContent = s.device;
+  document.getElementById("screenBody").innerHTML = s.render();
+
+  const navEl = document.getElementById("phoneNav");
+  navEl.innerHTML = "";
+  const label = document.createElement("div");
+  label.className = "nav-label";
+  label.textContent = "Prototype controls";
+  navEl.appendChild(label);
+  const row = document.createElement("div");
+  row.className = "nav-row";
+  if (state.screenIndex > 0) {
+    const back = document.createElement("button");
+    back.className = "btn btn-secondary";
+    back.textContent = "Back";
+    back.onclick = () => goTo(state.screenIndex - 1);
+    row.appendChild(back);
+  }
+  const next = document.createElement("button");
+  next.className = "btn btn-primary btn-full";
+  next.textContent = s.nav.next;
+  next.onclick = () => { if (s.id === "dashboard") { restart(); return; } goTo(state.screenIndex + 1); };
+  row.appendChild(next);
+  navEl.appendChild(row);
+
+  document.getElementById("whyList").innerHTML = s.requirements.map(r => `
+    <div class="req-row"><div class="req-id">${r[0]}</div><div class="req-text">${r[1]}</div></div>
+  `).join("");
+
+  document.getElementById("flowSteps").innerHTML = SCREENS.map((sc, i) => `
+    <div class="flow-chip ${i === state.screenIndex ? 'current' : (i < state.screenIndex ? 'done' : '')}">${i+1}. ${sc.title}</div>
+  `).join("");
+
+  attachScreenHandlers(s);
+
+  if (s.nav.autoAdvanceMs) {
+    clearTimeout(window.__autoTimer);
+    window.__autoTimer = setTimeout(() => { if (SCREENS[state.screenIndex].id === s.id) goTo(state.screenIndex + 1); }, s.nav.autoAdvanceMs);
+  }
+}
+
+function attachScreenHandlers(s){
+  document.querySelectorAll(".toggle[data-key]").forEach(t => {
+    t.onclick = () => { const key = t.getAttribute("data-key"); state.consents[key] = !state.consents[key]; renderStage(); };
+  });
+  if (s.id === "restricted") {
+    const btn = document.getElementById("inviteBtn");
+    if (btn) btn.onclick = () => goTo(state.screenIndex + 1);
+  }
+  if (s.id === "parent-landing") {
+    const dl = document.getElementById("chipDigilocker");
+    const otp = document.getElementById("chipOtp");
+    if (dl && otp) {
+      dl.onclick = () => { dl.classList.add("selected"); otp.classList.remove("selected"); };
+      otp.onclick = () => { otp.classList.add("selected"); dl.classList.remove("selected"); };
+    }
+  }
+  if (s.id === "dashboard") {
+    const map = {
+      rowAccess: ["Request a copy of your data", "We'll compile everything linked to this account and send a download link within 30 days.", "SLA: 30 days"],
+      rowCorrect: ["Correct something about your data", "Tell us what's inaccurate and we'll fix it and confirm back to you.", "SLA: within 90 days, as required by law"],
+      rowErase: ["Delete your data", "This permanently removes your data where we're not required to keep it for safety or legal reasons.", "SLA: 30 days, with confirmation once complete"],
+      rowGrievance: ["Report a privacy concern", "Your message goes directly to our grievance officer for this region.", "SLA: acknowledged in 24 hours, resolved well inside 90 days"],
+    };
+    Object.keys(map).forEach(id => {
+      const row = document.getElementById(id);
+      if (row) row.onclick = () => openModal(map[id][0], map[id][1], map[id][2]);
+    });
+  }
+}
+
+function openModal(title, body, sla){
+  const box = document.getElementById("modalBox");
+  box.innerHTML = `
+    <h4>${title}</h4><p>${body}</p>
+    <div class="sla-card" style="margin:0 0 18px;"><div><div class="sla-title">Status</div><div class="sla-meta">${sla}</div></div><div class="sla-chip">On track</div></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modalCancel">Cancel</button>
+      <button class="btn btn-primary" id="modalSubmit">Submit request</button>
+    </div>`;
+  document.getElementById("modalOverlay").classList.add("show");
+  document.getElementById("modalCancel").onclick = closeModal;
+  document.getElementById("modalSubmit").onclick = () => {
+    closeModal();
+    const area = document.getElementById("requestStatusArea");
+    if (area) area.innerHTML = `<div class="sla-card" style="margin:0 16px 10px;"><div><div class="sla-title">${title} — submitted</div><div class="sla-meta">${sla}</div></div><div class="sla-chip">Submitted</div></div>`;
+  };
+}
+function closeModal(){ document.getElementById("modalOverlay").classList.remove("show"); }
+
+function goTo(i){
+  state.screenIndex = Math.max(0, Math.min(SCREENS.length - 1, i));
+  renderRail(); renderStage();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function restart(){
+  state.screenIndex = 0;
+  state.consents = { personalisation: false, analytics: true, crossapp: false, ads: false };
+  goTo(0);
+}
+
+renderRail();
+renderStage();
+</script>
+</body>
+</html>
